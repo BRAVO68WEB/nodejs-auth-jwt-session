@@ -1,0 +1,28 @@
+{
+  "name": "nodejs-jwt",
+  "version": "1.0.0",
+  "description": "An Basic implementation of JWT and Session token",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BRAVO68WEB/nodejs-auth-jwt-session.git"
+  },
+  "keywords": [
+    "jwt",
+    "auth",
+    "session",
+    "redis",
+    "mongodb",
+    "token",
+    "refresh-token"
+  ],
+  "author": "BRAVO68WEB",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/BRAVO68WEB/nodejs-auth-jwt-session/issues"
+  },
+  "homepage": "https://github.com/BRAVO68WEB/nodejs-auth-jwt-session#readme"
+}
