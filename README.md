@@ -1,5 +1,5 @@
 # jwt-auth-nodejs
-Tutorial for basic JWT authentication in Node.js
+Template to get started with Backend auth module for REST API
 
 # Setup
 
