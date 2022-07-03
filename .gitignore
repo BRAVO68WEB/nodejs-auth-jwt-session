@@ -102,3 +102,6 @@ dist
 
 # TernJS port file
 .tern-port
+
+jwtRS256.key
+jwtRS256.key.pub
