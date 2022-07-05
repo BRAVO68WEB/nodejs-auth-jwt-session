@@ -23,7 +23,7 @@ async function clientErrorHandler(err, req, res, next) {
         next(err)
     }
 }
-
+// eslint-disable-next-line no-unused-vars
 async function errorHandler(err, _req, res, _next) {
     if (err.message === 'Invalid request') {
         return res.status(400).send({

@@ -114,33 +114,42 @@ async function checkUsernameAvaiblity(req, res, next) {
     }
 }
 
-async function GetOnlyNewAccessToken(req, res, _next) {
-    const userData = req.userData.user
-    const access_token = GenerateAccessToken(userData)
+async function GetOnlyNewAccessToken(req, res, next) {
+    try {
+        const userData = req.userData.user
+        const access_token = GenerateAccessToken(userData)
 
-    return res.json({
-        status: true,
-        message: 'Successfully generated new access token.',
-        data: {
-            access_token,
-        },
-    })
+        return res.json({
+            status: true,
+            message: 'Successfully generated new access token.',
+            data: {
+                access_token,
+            },
+        })
+    } catch (error) {
+        next(error)
+    }
 }
 
-async function GetNewToken(req, res, _next) {
-    const userData = req.userData.user
+async function GetNewToken(req, res, next) {
+    try {
+        const userData = req.userData.user
 
-    const access_token = GenerateAccessToken(userData)
-    const refresh_token = GenerateRefreshToken(userData)
+        const access_token = GenerateAccessToken(userData)
+        const refresh_token = GenerateRefreshToken(userData)
 
-    return res.json({
-        status: true,
-        message: 'Successfully generated new access token and refresh token.',
-        data: {
-            access_token,
-            refresh_token,
-        },
-    })
+        return res.json({
+            status: true,
+            message:
+                'Successfully generated new access token and refresh token.',
+            data: {
+                access_token,
+                refresh_token,
+            },
+        })
+    } catch (error) {
+        next(error)
+    }
 }
 
 module.exports = {

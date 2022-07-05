@@ -1,12 +1,12 @@
 const nodemailer = require('nodemailer')
 
 let mailClient = nodemailer.createTransport({
-    host: 'smtp.ethereal.email',
-    port: 587,
+    host: process.env.MAIL_HOST,
+    port: process.env.MAIL_PORT,
     secure: false, // true for 465, false for other ports
     auth: {
-        user: testAccount.user, // generated ethereal user
-        pass: testAccount.pass, // generated ethereal password
+        user: process.env.MAIL_USER, // generated ethereal user
+        pass: process.env.MAIL_PASS, // generated ethereal password
     },
 })
 
@@ -20,10 +20,6 @@ async function sendMail(body, next) {
     }
     try {
         await mailClient.sendMail(mailOptions)
-        return res.json({
-            status: true,
-            message: 'Mail sent successfully.',
-        })
     } catch (error) {
         next(error)
     }

@@ -1,6 +1,6 @@
 const { exists } = require('fs')
 
-module.exports = async () => {
+module.exports = async (fn) => {
     const notDiffVars = []
     exists('jwtRS256.key', (chk) => {
         if (!chk) {
