@@ -4,6 +4,7 @@ const {
     GenerateAccessToken,
     GenerateRefreshToken,
 } = require('../services/auth.service')
+const Mailer = require('../services/mail.service')
 
 async function Register(req, res, next) {
     // encrypt password
@@ -37,6 +38,13 @@ async function Register(req, res, next) {
 
     try {
         const saved_user = await user.save()
+
+        Mailer.sendMail({
+            to: saved_user.email,
+            subject: 'Welcome to the app',
+            text: `Welcome to the app, ${saved_user.username}`,
+        })
+
         res.json({
             status: true,
             message: 'Registered successfully.',
