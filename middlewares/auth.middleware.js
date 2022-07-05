@@ -1,75 +1,63 @@
-const jwt = require("jsonwebtoken");
-const redis_client = require("../redis_connect");
+const jwt = require('jsonwebtoken')
+const redis_client = require('../helpers/redis_connect')
+const fs = require('fs')
+const publicKey = fs.readFileSync('jwtRS256.key.pub')
 
-function verifyToken(req, res, next) {
-  try {
-    // Bearer tokenstring
-    const token = req.headers.authorization.split(" ")[1];
+function verifyToken(req, _res, next) {
+    try {
+        // Bearer tokenstring
+        if (req.headers.authorization === undefined)
+            throw new Error('Invalid request')
 
-    const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
-    req.userData = decoded;
+        const token = req.headers.authorization.split(' ')[1]
 
-    req.token = token;
+        const decoded = jwt.verify(token, publicKey)
 
-    // varify blacklisted access token.
-    redis_client.get("BL_" + decoded.sub.toString(), (err, data) => {
-      if (err) throw err;
+        if (decoded.tokenType !== 'access_token')
+            throw new Error('Invalid token')
 
-      if (data === token)
-        return res.status(401).json({
-          status: false,
-          message: "blacklisted token.",
-        });
-      next();
-    });
-  } catch (error) {
-    return res.status(401).json({
-      status: false,
-      message: "Your session is not valid.",
-      data: error,
-    });
-  }
+        req.userData = decoded
+
+        req.token = token
+
+        // verify blacklisted access token.
+        redis_client.get('BL_' + decoded.user.toString(), (err, data) => {
+            if (err) throw err
+
+            if (data === token) throw new Error('Blacklisted token')
+            next()
+        })
+    } catch (error) {
+        next(error)
+    }
 }
 
-function verifyRefreshToken(req, res, next) {
-  const token = req.body.token;
+function verifyRefreshToken(req, _res, next) {
+    const token = req.body.token
 
-  if (token === null)
-    return res.status(401).json({
-      status: false,
-      message: "Invalid request.",
-    });
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
-    req.userData = decoded;
+    if (token === null) throw new Error('Invalid request')
+    try {
+        const decoded = jwt.verify(token, publicKey)
+        req.userData = decoded
+        if (decoded.tokenType !== 'refresh_token')
+            throw new Error('Invalid token.')
+        // verify if token is in store or not
+        redis_client.get(decoded.user.toString(), (err, data) => {
+            if (err) throw err
 
-    // verify if token is in store or not
-    redis_client.get(decoded.sub.toString(), (err, data) => {
-      if (err) throw err;
+            if (data === null)
+                throw new Error('Invalid request :- Token is not in store')
+            if (JSON.parse(data).token != token)
+                throw new Error('Invalid request :- Token is not in store')
 
-      if (data === null)
-        return res.status(401).json({
-          status: false,
-          message: "Invalid request. Token is not in store.",
-        });
-      if (JSON.parse(data).token != token)
-        return res.status(401).json({
-          status: false,
-          message: "Invalid request. Token is not same in store.",
-        });
-
-      next();
-    });
-  } catch (error) {
-    return res.status(401).json({
-      status: true,
-      message: "Your session is not valid.",
-      data: error,
-    });
-  }
+            next()
+        })
+    } catch (error) {
+        next(error)
+    }
 }
 
 module.exports = {
-  verifyToken,
-  verifyRefreshToken,
-};
+    verifyToken,
+    verifyRefreshToken,
+}

@@ -1,138 +1,119 @@
-const User = require("../models/user.model");
-const jwt = require("jsonwebtoken");
-const redis_client = require("../redis_connect");
+const User = require('../models/user.model')
 
-async function Register(req, res) {
-  // encrypt password
-  const user = new User({
-    username: req.body.username,
-  });
-  user.setPassword(req.body.password);
+async function GetUserById(req, res, next) {
+    const user_id = req.params.user_id
 
-  try {
-    const saved_user = await user.save();
-    res.json({
-      status: true,
-      message: "Registered successfully.",
-      data: saved_user,
-    });
-  } catch (error) {
-    // do logging in DB or file.
-    res.status(400).json({
-      status: false,
-      message: "Something went wrong.",
-      data: error,
-    });
-  }
-}
+    try {
+        const user = await User.findById(user_id).exec()
 
-async function Login(req, res) {
-  const username = req.body.username;
+        if (user === null) throw new Error('User not found')
 
-  try {
-    const user = await User.findOne({
-      username: username,
-    }).exec();
-
-    if (user === null || !user.validatePassword(req.body.password))
-      return res.status(401).json({
-        status: false,
-        message: "Username or Password is not valid.",
-      });
-    // console.log("user", user);
-    const access_token = jwt.sign(
-      {
-        sub: user._id,
-      },
-      process.env.JWT_ACCESS_SECRET,
-      {
-        expiresIn: process.env.JWT_ACCESS_TIME,
-      }
-    );
-    // console.log("access_token", access_token);
-    const refresh_token = GenerateRefreshToken(user._id);
-
-    return res.json({
-      status: true,
-      message: "Login Successfully.",
-      data: {
-        access_token,
-        refresh_token,
-      },
-    });
-  } catch (error) {
-    return res.status(401).json({
-      status: true,
-      message: "Login Failiure.",
-      data: error,
-    });
-  }
-}
-
-async function Logout(req, res) {
-  const user_id = req.userData.sub;
-  const token = req.token;
-
-  await redis_client.del(user_id.toString());
-
-  await redis_client.set("BL_" + user_id.toString(), token);
-
-  return res.json({
-    status: true,
-    message: "Successfully Logged out.",
-  });
-}
-
-function GetAccessToken(req, res) {
-  const user_id = req.userData.sub;
-  const access_token = jwt.sign(
-    {
-      sub: user_id,
-    },
-    process.env.JWT_ACCESS_SECRET,
-    {
-      expiresIn: process.env.JWT_ACCESS_TIME,
+        return res.json({
+            status: true,
+            message: 'User found.',
+            data: user,
+        })
+    } catch (error) {
+        next(error)
     }
-  );
-  const refresh_token = GenerateRefreshToken(user_id);
-  return res.json({
-    status: true,
-    message: "Success successfully Generated RefreshToken",
-    data: {
-      access_token,
-      refresh_token,
-    },
-  });
 }
 
-function GenerateRefreshToken(user_id) {
-  const refresh_token = jwt.sign(
-    {
-      sub: user_id,
-    },
-    process.env.JWT_REFRESH_SECRET,
-    {
-      expiresIn: process.env.JWT_REFRESH_TIME,
+async function GetUserByUsername(req, res, next) {
+    const username = req.params.username
+
+    try {
+        const user = await User.findOne({
+            username: username,
+        }).exec()
+
+        if (user === null) throw new Error('User not found')
+
+        return res.json({
+            status: true,
+            message: 'User found.',
+            data: user,
+        })
+    } catch (error) {
+        next(error)
     }
-  );
+}
 
-  redis_client.get(user_id.toString(), (err, data) => {
-    if (err) throw err;
+async function GetAllUsers(_req, res, next) {
+    try {
+        const users = await User.find().exec()
 
-    redis_client.set(
-      user_id.toString(),
-      JSON.stringify({
-        token: refresh_token,
-      })
-    );
-  });
+        if (users === null) throw new Error('User not found')
 
-  return refresh_token;
+        return res.json({
+            status: true,
+            message: 'Users found.',
+            data: users,
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
+async function UpdateUser(req, res, next) {
+    const user_id = req.userData.user
+    const userData = req.body
+
+    try {
+        const user = await User.findById(user_id).exec()
+
+        if (user === null) throw new Error('User not found')
+
+        const updatedUser = await User.findByIdAndUpdate(user_id, userData, {
+            new: true,
+        }).exec()
+
+        return res.json({
+            status: true,
+            message: 'User updated.',
+            data: updatedUser,
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
+async function Dashboard(req, res, next) {
+    const user_id = req.userData.user
+
+    try {
+        return res.json({
+            status: true,
+            message: 'Hello ' + user_id + ' from dashboard.',
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
+async function DeleteUser(req, res, next) {
+    const user_id = req.userData.user
+
+    try {
+        const user = await User.findById(user_id).exec()
+
+        if (user === null) throw new Error('User not found')
+
+        await User.findByIdAndDelete(user_id).exec()
+
+        return res.json({
+            status: true,
+            message: 'User deleted.',
+        })
+    } catch (error) {
+        next(error)
+    }
 }
 
 module.exports = {
-  Register,
-  Login,
-  Logout,
-  GetAccessToken,
-};
+    GetUserById,
+    GetAllUsers,
+    GetUserByUsername,
+    UpdateUser,
+    Dashboard,
+    DeleteUser,
+}
