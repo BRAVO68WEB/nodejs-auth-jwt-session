@@ -1,8 +1,9 @@
 const jwt = require('jsonwebtoken')
 const redis_client = require('../helpers/redis_connect')
-const fs = require('fs')
+const { readFileSync } = require('fs')
+// const waitFor = require('wait-for-stuff')
 
-const privateKey = fs.readFileSync('jwtRS256.key')
+const privateKey = readFileSync('jwtRS256.key')
 
 function GenerateAccessToken(user_id) {
     let userData = {

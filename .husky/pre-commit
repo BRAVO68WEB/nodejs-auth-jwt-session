@@ -2,4 +2,5 @@
 . "$(dirname -- "$0")/_/husky.sh"
 
 npx pretty-quick --staged
-npm run lint --fix
+npx eslint --fix .
+# npx --no-install lint-staged

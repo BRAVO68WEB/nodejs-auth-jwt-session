@@ -2,12 +2,12 @@ const { exists } = require('fs')
 
 module.exports = async (fn) => {
     const notDiffVars = []
-    exists('jwtRS256.key', (chk) => {
+    await exists('jwtRS256.key', (chk) => {
         if (!chk) {
             throw new Error('Please generate jwtRS256.key ("Private Key")')
         }
     })
-    exists('jwtRS256.key.pub', (chk) => {
+    await exists('jwtRS256.key.pub', (chk) => {
         if (!chk) {
             throw new Error('Please generate jwtRS256.key.pub ("Public Key")')
         }
